@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.cdodi.data";
+option java_outer_classname = "ProtoUtils";
+
+message Void {}
+message Null {}
+message Result {
+  bool isSuccess = 1;
+}

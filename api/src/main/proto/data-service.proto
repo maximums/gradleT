@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.cdodi.data";
+
+package data;
+
+service DataService {
+  rpc createUser(UserRequest) returns (UserResponse) {}
+  rpc getUser(UserEmail) returns (UserResponse) {}
+  rpc getAllUsers(AllUsersRequest) returns (AllUsersResponse) {}
+  rpc deleteUser(UserEmail) returns (UserDeleteResult) {}
+}
+
+message AllUsersRequest {
+  uint32 offset = 1;
+}
+
+message UserEmail {
+  string email = 1;
+}
+
+message UserDeleteResult {
+  bool isDeleted = 1;
+}
+
+message UserRequest {
+  string email = 1;
+  string password = 2;
+  optional string name = 3;
+  uint32 avatarId = 4;
+  uint64 dateOfBirth = 5;
+  string hobbiesIds = 6;
+}
+
+message AllUsersResponse {
+  repeated User users = 1;
+}
+
+message UserResponse {
+  oneof result {
+    User user = 1;
+    bool isNull = 2;
+  }
+}
+
+message User {
+  uint32 id = 1;
+  string email = 2;
+  string password = 3;
+  optional string name = 4;
+  uint32 avatarId = 5;
+  uint64 dateOfBirth = 6;
+  string hobbiesIds = 7;
+  uint64 accountCreationTime = 8;
+}
