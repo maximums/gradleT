@@ -9,6 +9,24 @@ application {
     mainClass.set("cdodi.com.data.Main")
 }
 
+tasks.register<Jar>("fatJar") {
+    dependsOn.addAll(
+        listOf(
+            "compileJava",
+            "compileKotlin",
+            "processResources"
+        )
+    )
+//    archiveClassifier.set("standalone") // Naming the jar
+//    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes["Main-Class"] = application.mainClass
+    }
+    val contents = configurations.runtimeClasspath.get()
+        .map { if (it.isDirectory) it else zipTree(it) } + sourceSets.main.get().output
+    from(contents)
+}
+
 group = "cdodi.com.data"
 version = "0.1.0"
 
