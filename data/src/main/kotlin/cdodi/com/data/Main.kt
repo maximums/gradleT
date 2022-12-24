@@ -6,5 +6,4 @@ fun main(args: Array<String>) {
     val server = DataServer(8080)
     server.start()
     server.blockUntilShutdown()
-    println("Working")
 }

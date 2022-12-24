@@ -11,10 +11,10 @@ object Users : LongIdTable() {
     val name = varchar("name", 50).nullable()
     val email = varchar("email", 30)
     val password = varchar("password", 50)
-    val dateOfBirth = long("dateOfBirth").nullable()
-    val accountCreationDate = long("accountCreationDate")
+    val dateOfBirth = long("dateOfBirth")
+    val accountCreationTime = long("accountCreationTime")
     val avatarID = integer("avatarID").default(1)
-    val hobbyIds = varchar("hobbyIds", 30)
+    val hobbiesIds = varchar("hobbiesIds", 30)
 }
 
 class User(id: EntityID<Long>) : LongEntity(id) {
@@ -24,7 +24,7 @@ class User(id: EntityID<Long>) : LongEntity(id) {
     var email by Users.email
     var password by Users.password
     var dateOfBirth by Users.dateOfBirth
-    var accountCreationDate by Users.accountCreationDate
+    var accountCreationTime by Users.accountCreationTime
     var avatarID by Users.avatarID
-    var hobbyIds by Users.hobbyIds
+    var hobbiesIds by Users.hobbiesIds
 }

@@ -6,6 +6,13 @@ services:
     depends_on:
       - db
 
+  gateway:
+    build: ./gateway/.
+    ports:
+      - "8090:8090"
+    depends_on:
+      - data-service
+
   db:
     image: postgres
     volumes:

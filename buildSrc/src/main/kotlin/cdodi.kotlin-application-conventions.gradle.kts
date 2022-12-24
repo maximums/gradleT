@@ -3,9 +3,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     application
     id("org.jetbrains.kotlin.jvm")
-    id("com.github.johnrengelman.shadow")
+//    id("com.github.johnrengelman.shadow")
 }
-
 
 repositories {
     mavenCentral()

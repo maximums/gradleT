@@ -5,26 +5,24 @@ plugins {
     id("cdodi.kotlin-application-conventions")
 }
 
-application {
-    mainClass.set("cdodi.com.data.Main")
-}
+application.mainClass.set("cdodi.com.data.Main")
 
-tasks.register<Jar>("fatJar") {
-    dependsOn.addAll(
-        listOf(
-            "compileJava",
-            "compileKotlin",
-            "processResources"
-        )
-    )
-//    archiveClassifier.set("standalone") // Naming the jar
-//    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+tasks.withType<Jar> {
+    // Otherwise you'll get a "No main manifest attribute" error
     manifest {
-        attributes["Main-Class"] = application.mainClass
+        attributes["Main-Class"] = "cdodi.com.data.Main"
     }
-    val contents = configurations.runtimeClasspath.get()
-        .map { if (it.isDirectory) it else zipTree(it) } + sourceSets.main.get().output
-    from(contents)
+
+    // To avoid the duplicate handling strategy error
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    // To add all of the dependencies otherwise a "NoClassDefFoundError" error
+    from(sourceSets.main.get().output)
+
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
 }
 
 group = "cdodi.com.data"
@@ -35,7 +33,6 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     implementation("org.postgresql:postgresql:$postgresql_version")
-
     implementation(project(":api"))
     runtimeOnly("io.grpc:grpc-netty:1.47.0")
 }
