@@ -5,7 +5,7 @@ option java_package = "com.cdodi.data";
 
 package data;
 
-service DataService {
+service UserService {
   rpc createUser(UserRequest) returns (UserResponse) {}
   rpc getUser(UserEmail) returns (UserResponse) {}
   rpc getAllUsers(AllUsersRequest) returns (AllUsersResponse) {}
@@ -13,7 +13,7 @@ service DataService {
 }
 
 message AllUsersRequest {
-  uint32 offset = 1;
+  uint64 offset = 1;
 }
 
 message UserEmail {
@@ -45,7 +45,7 @@ message UserResponse {
 }
 
 message User {
-  uint32 id = 1;
+  uint64 id = 1;
   string email = 2;
   string password = 3;
   optional string name = 4;

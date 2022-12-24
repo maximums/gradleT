@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.cdodi.data";
+
+package data;
+
+service ChatService {
+  rpc createChat(ChatRequest) returns (ChatResponse) {}
+  rpc getChat(ChatId) returns (ChatResponse) {}
+  rpc getAllChats(AllChatRequest) returns (AllChatResponse) {}
+  rpc deleteChat(ChatId) returns (ChatDeleteResult) {}
+}
+
+message AllChatRequest {
+  uint32 offset = 1;
+}
+
+message AllChatResponse {
+  repeated Chat chats = 1;
+}
+
+message ChatId {
+  string id = 1;
+}
+
+message ChatRequest {
+  string name = 1;
+  uint64 ownerId = 2;
+}
+
+message ChatResponse {
+  oneof result {
+    Chat chat = 1;
+    bool isNull = 2;
+  }
+}
+
+message ChatDeleteResult {
+  bool isDeleted = 1;
+}
+
+message Chat {
+  string name = 1;
+  uint64 ownerId = 2;
+}

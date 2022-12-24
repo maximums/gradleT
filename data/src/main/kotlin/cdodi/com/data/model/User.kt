@@ -13,8 +13,8 @@ object Users : LongIdTable() {
     val password = varchar("password", 50)
     val dateOfBirth = long("dateOfBirth")
     val accountCreationTime = long("accountCreationTime")
-    val avatarID = integer("avatarID").default(1)
-    val hobbiesIds = varchar("hobbiesIds", 30)
+    var avatarID = integer("avatarID").default(1)
+    var hobbiesIds = varchar("hobbiesIds", 50)
 }
 
 class User(id: EntityID<Long>) : LongEntity(id) {

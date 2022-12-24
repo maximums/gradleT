@@ -1,11 +1,14 @@
 package cdodi.com.data
 
+import cdodi.com.data.services.MessageService
+import cdodi.com.data.services.UserService
 import io.grpc.ServerBuilder
 
 class DataServer(private val port: Int) {
     private val server = ServerBuilder
         .forPort(port)
         .addService(UserService())
+        .addService(MessageService())
         .build()
 
     fun start() {
