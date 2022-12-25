@@ -33,6 +33,8 @@ class MessageService : MessageServiceGrpcKt.MessageServiceCoroutineImplBase() {
             dbQuery {
                 val msg = Message[request.id]
                 msg.body = request.content
+                msg.isRead = false
+                msg.timestamp = Date().time
                 msg.toMessageResponse()
             }
         else MessageResponse.newBuilder().setIsNull(true).build()

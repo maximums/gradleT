@@ -1,10 +1,11 @@
 package cdodi.com.gateway.plugins
 
-import cdodi.com.gateway.Email
+import cdodi.com.gateway.*
+import cdodi.com.gateway.dto.RestEditMessage
+import cdodi.com.gateway.dto.RestMessageRequest
 import cdodi.com.gateway.dto.RestUserRequest
-import cdodi.com.gateway.toRestUserResponse
-import cdodi.com.gateway.toUserRequest
 import com.cdodi.data.*
+import com.cdodi.data.MessageId
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.ktor.server.routing.*
@@ -30,7 +31,9 @@ fun Application.configureRouting() {
         }
 
         get("/all") {
-            val resp = stub.getAllUsers(AllUsersRequest.getDefaultInstance()).usersList.map(User::toRestUserResponse)
+            val resp = stub.getAllUsers(
+                AllUsersRequest.newBuilder().setOffset(0).build()
+            ).usersList.map(User::toRestUserResponse)
             call.respond(HttpStatusCode.OK, resp)
         }
 
@@ -55,16 +58,40 @@ fun Application.configureRouting() {
         route("/msg") {
             get("/{id}") {
                 val msgId = call.parameters["id"]?.toLong() ?: return@get
-                val resp = msgStub.getMessage(MessageId.newBuilder().setId(msgId).build()).toString()
+                val resp = msgStub.getMessage(MessageId { id = msgId }).toRestMessageResponse() ?: return@get
                 call.respond(HttpStatusCode.OK, resp)
             }
+
             get("/all") {
-                val resp = msgStub.getAllMessages(AllMessageRequest.newBuilder().setOffset(0).build()).toString()
+                val resp = msgStub.getAllMessages(
+                    AllMessageRequest.newBuilder().setOffset(0).build()
+                ).messagesList.map(Message::toRestMessageResponse)
                 call.respond(HttpStatusCode.OK, resp)
             }
-            post("/add") {  }
-            delete("/del") {  }
-            patch("/edit") {  }
+
+            post("/add") {
+                val newMessage = call.receive<RestMessageRequest>().toMessageRequest(senderId = 2)
+                val response = msgStub.createMessage(newMessage).toRestMessageResponse() ?: return@post
+                call.respond(HttpStatusCode.OK, response)
+            }
+
+            delete("/del/{id}") {
+                val msgId = call.parameters["id"]?.toLong() ?: return@delete
+                val msg = msgStub.getMessage(MessageId { id = msgId }).toRestMessageResponse() ?: return@delete
+                msgStub.deleteMessage(MessageId { id = msgId })
+
+                call.respond(HttpStatusCode.OK, "Message [${msg.content}] was successfully deleted")
+            }
+
+            patch("/edit") {
+                val newMsg = call.receive<RestEditMessage>()
+                val response = msgStub.editMessage(MessageEditRequest {
+                    id = newMsg.id
+                    content = newMsg.content
+                }).toRestMessageResponse() ?: return@patch
+
+                call.respond(HttpStatusCode.OK, response)
+            }
         }
 
     }

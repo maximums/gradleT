@@ -10,7 +10,7 @@ import java.util.*
 
 class UserService : UserServiceGrpcKt.UserServiceCoroutineImplBase() {
     override suspend fun createUser(request: UserRequest): UserResponse =
-        if (isEmailRegistered(request.email))
+        if (!isEmailRegistered(request.email))
             dbQuery {
                 User.new {
                     name = request.name
