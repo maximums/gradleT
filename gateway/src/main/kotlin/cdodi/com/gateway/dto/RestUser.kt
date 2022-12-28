@@ -21,3 +21,6 @@ data class RestUserResponse(
     val accountCreationTime: Long,
     val hobbiesIds: String,
 )
+
+@kotlinx.serialization.Serializable
+data class AuthData(val email: String, val password: String)

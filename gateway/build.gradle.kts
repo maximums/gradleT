@@ -8,6 +8,10 @@ version = "0.1.0"
 
 
 dependencies {
+    implementation("org.mindrot:jbcrypt:0.4")
+    implementation("io.ktor:ktor-server-auth:2.1.3")
+    implementation("io.ktor:ktor-server-auth-jwt:2.1.3")
+    implementation("io.ktor:ktor-server-websockets:2.1.3")
     implementation("io.ktor:ktor-server-content-negotiation-jvm:2.1.3")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:2.1.3")
     implementation(project(":api"))
