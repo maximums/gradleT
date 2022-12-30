@@ -10,7 +10,8 @@ service MessageService {
   rpc deleteMessage(MessageId) returns (MessageDeleteResult) {}
   rpc editMessage(MessageEditRequest) returns (MessageResponse) {}
   rpc getMessage(MessageId) returns (MessageResponse) {}
-  rpc getAllMessages(AllMessageRequest) returns (AllMessageResponse){}
+  rpc getAllMessages(AllMessageRequest) returns (AllMessageResponse) {}
+  rpc getAllChatMessages(ChatMessageRequest) returns (AllMessageResponse) {}
 }
 
 message AllMessageRequest {
@@ -28,6 +29,11 @@ message MessageId {
 message MessageEditRequest {
   uint64 id = 1;
   string content = 2;
+}
+
+message ChatMessageRequest {
+  uint64 chatId = 1;
+  uint64 offset = 2;
 }
 
 message MessageRequest {

@@ -1,14 +1,13 @@
 package cdodi.com.gateway
 
-import cdodi.com.gateway.dto.RestMessageRequest
-import cdodi.com.gateway.dto.RestMessageResponse
-import cdodi.com.gateway.dto.RestUserRequest
-import cdodi.com.gateway.dto.RestUserResponse
+import cdodi.com.gateway.dto.*
 import com.cdodi.data.*
 
 inline fun Email(builder: UserEmail.Builder.() -> Unit): UserEmail =
     UserEmail.newBuilder().apply(builder).build()
 
+inline fun ChatMessages(builder: ChatMessageRequest.Builder.() -> Unit): ChatMessageRequest =
+    ChatMessageRequest.newBuilder().apply(builder).build()
 
 fun UserResponse.toRestUserResponse(): RestUserResponse? =
     if (hasUser()) RestUserResponse(
@@ -74,5 +73,25 @@ fun RestMessageRequest.toMessageRequest(senderId: Long): MessageRequest =
         .setContent(content)
         .setSenderId(senderId)
         .setReceiverId(receiverId)
+        .setIsRead(isRead)
+        .build()
+
+/////////
+
+fun Message.toRestMessage(): RestMessage =
+    RestMessage(
+        id,
+        content,
+        receiverId,
+        senderId,
+        timestamp,
+        isRead
+    )
+
+fun RestMessage.toMessageRequest(): MessageRequest =
+    MessageRequest.newBuilder()
+        .setContent(content)
+        .setReceiverId(chatId)
+        .setSenderId(senderId)
         .setIsRead(isRead)
         .build()

@@ -35,7 +35,6 @@ fun User.toUserRpc(): UserRpc =
 inline fun User(builder: UserRpc.Builder.() -> Unit): UserRpc =
     UserRpc.newBuilder().apply(builder).build()
 
-
 fun Message?.toMessageResponse(): MessageResponse =
     if (this == null) MessageResponse.newBuilder().setIsNull(true).build()
     else MessageResponse.newBuilder().setMessage(

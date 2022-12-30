@@ -1,13 +1,15 @@
 package cdodi.com.gateway.controllers
 
-import cdodi.com.gateway.Email
-import cdodi.com.gateway.toRestUserResponse
-import com.cdodi.data.AllUsersRequest
-import com.cdodi.data.MessageServiceGrpcKt
-import com.cdodi.data.User
-import com.cdodi.data.UserServiceGrpcKt
+import cdodi.com.gateway.*
+import cdodi.com.gateway.dto.RestMessage
+import cdodi.com.gateway.dto.RestMessageRequest
+import cdodi.com.gateway.dto.RestMessageResponse
+import com.cdodi.data.*
 import io.ktor.http.*
+import io.ktor.serialization.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
@@ -19,7 +21,7 @@ import kotlin.collections.LinkedHashSet
 
 data class ChatSession(val chat: String, val session: DefaultWebSocketServerSession)
 
-val connections = Collections.synchronizedSet<ChatSession>(LinkedHashSet())
+val connections: MutableSet<ChatSession> = Collections.synchronizedSet<ChatSession>(LinkedHashSet())
 
 fun Route.userRoutes(
     msgStub: MessageServiceGrpcKt.MessageServiceCoroutineStub,
@@ -63,13 +65,23 @@ fun Route.userRoutes(
 
     webSocket("/chat/{id}") {
         val chat = call.parameters["id"] ?: return@webSocket
+        val principal = call.principal<JWTPrincipal>() ?: return@webSocket
+        val userEmail = principal.payload.getClaim("email").asString()
+        val user = service.getUser(Email { email = userEmail }).toRestUserResponse() ?: return@webSocket
+        val initMessages = msgStub.getAllChatMessages(ChatMessages {
+            chatId = chat.toLong()
+            offset = 0
+        }).messagesList.map(Message::toRestMessage)
+
         connections += ChatSession(chat, this)
-        send("You are connected to chat:= $chat")
+
+        if (initMessages.isNotEmpty()) initMessages.forEach { sendSerialized(it) }
+
         for (frame in incoming) {
-            frame as? Frame.Text ?: continue
-            val receivedText = frame.readText()
+            val receivedMsg = converter?.deserialize<RestMessageRequest>(frame) ?: return@webSocket
+            msgStub.createMessage(receivedMsg.toMessageRequest(user.id))
             connections.forEach {
-                if (it.chat == chat) it.session.send(receivedText)
+                if (it.chat == chat) it.session.sendSerialized(receivedMsg)
             }
         }
     }

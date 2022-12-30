@@ -47,6 +47,13 @@ class MessageService : MessageServiceGrpcKt.MessageServiceCoroutineImplBase() {
         val messages = Message.all().limit(50, request.offset).map(Message::toMessageRpc)
         AllMessageResponse.newBuilder().addAllMessages(messages).build()
     }
+
+    override suspend fun getAllChatMessages(request: ChatMessageRequest): AllMessageResponse = dbQuery {
+        val messages = Message.find { Messages.receiver eq request.chatId }
+            .limit(50, request.offset)
+            .map(Message::toMessageRpc)
+        AllMessageResponse.newBuilder().addAllMessages(messages).build()
+    }
 }
 
 suspend fun isMessagePresent(id: Long): Boolean = dbQuery {

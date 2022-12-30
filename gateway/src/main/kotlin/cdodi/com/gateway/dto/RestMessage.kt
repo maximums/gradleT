@@ -21,3 +21,13 @@ data class RestEditMessage(
     val id: Long,
     val content: String
 )
+
+@kotlinx.serialization.Serializable
+data class RestMessage(
+    val id: Long,
+    val content: String,
+    val chatId: Long,
+    val senderId: Long,
+    val date: Long,
+    val isRead: Boolean
+)
