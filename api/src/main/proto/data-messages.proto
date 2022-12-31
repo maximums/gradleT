@@ -6,10 +6,10 @@ option java_package = "com.cdodi.data";
 package data;
 
 service MessageService {
-  rpc createMessage(MessageRequest) returns (MessageResponse) {}
-  rpc deleteMessage(MessageId) returns (MessageDeleteResult) {}
+  rpc createMessage(MessageRequest) returns (Message) {}
+  rpc deleteMessage(MessageGetReq) returns (MessageDeleteResult) {}
   rpc editMessage(MessageEditRequest) returns (MessageResponse) {}
-  rpc getMessage(MessageId) returns (MessageResponse) {}
+  rpc getMessage(MessageGetReq) returns (MessageResponse) {}
   rpc getAllMessages(AllMessageRequest) returns (AllMessageResponse) {}
   rpc getAllChatMessages(ChatMessageRequest) returns (AllMessageResponse) {}
 }
@@ -22,8 +22,9 @@ message AllMessageResponse {
   repeated Message messages = 1;
 }
 
-message MessageId {
+message MessageGetReq {
   uint64 id = 1;
+  uint64 senderId = 2;
 }
 
 message MessageEditRequest {

@@ -20,13 +20,21 @@ fun Route.messageRoutes(
     userService: UserServiceGrpcKt.UserServiceCoroutineStub
 ) {
     get("/{id}") {
+        val principal = call.principal<JWTPrincipal>() ?: return@get
+        val userEmail = principal.payload.getClaim("email").asString()
+        val user = userService.getUser(Email { email = userEmail }).toRestUserResponse() ?: return@get
         val msgId = call.parameters["id"]?.toLong()
         if (msgId == null) {
             call.respond(HttpStatusCode.BadRequest, "Missing parameter 'id'")
             return@get
         }
 
-        val resp = messageService.getMessage(MessageId { id = msgId }).toRestMessageResponse()
+        val resp = messageService.getMessage(
+            MessageGetReq {
+                id = msgId
+                senderId = user.id
+            }
+        ).toRestMessageResponse()
         if (resp == null) {
             call.respond(HttpStatusCode.BadRequest, "Message with id: '$msgId' not found")
             return@get
@@ -49,28 +57,29 @@ fun Route.messageRoutes(
         val userId = userService.getUser(Email { email = userEmail }).user.id
 
         val newMessage = call.receive<RestMessageRequest>().toMessageRequest(senderId = userId)
-        // TODO: need to remove nullability because user will exist always[data:MessageService.createMessage]
-        val response = messageService.createMessage(newMessage).toRestMessageResponse() ?: return@post
+        val response = messageService.createMessage(newMessage).toRestMessageResponse()
 
         call.respond(HttpStatusCode.OK, response)
     }
 
     delete("/del/{id}") {
+        val principal = call.principal<JWTPrincipal>() ?: return@delete
+        val userEmail = principal.payload.getClaim("email").asString()
+        val user = userService.getUser(Email { email = userEmail }).toRestUserResponse() ?: return@delete
         val msgId = call.parameters["id"]?.toLong()
         if (msgId == null) {
             call.respond(HttpStatusCode.BadRequest, "Missing parameter 'id'")
             return@delete
         }
 
-        val msg = messageService.getMessage(MessageId { id = msgId }).toRestMessageResponse()
-        if (msg == null) {
-            call.respond(HttpStatusCode.BadRequest, "Message with id: '$msgId' not found")
-            return@delete
-        }
-        // TODO: need to refactor service[message can be deleted only by owner]
-        messageService.deleteMessage(MessageId { id = msgId })
+        messageService.deleteMessage(
+            MessageGetReq {
+                id = msgId
+                senderId = user.id
+            }
+        )
 
-        call.respond(HttpStatusCode.OK, "Message [${msg.content}] was successfully deleted")
+        call.respond(HttpStatusCode.OK, "Message was successfully deleted")
     }
 
     patch("/edit") {

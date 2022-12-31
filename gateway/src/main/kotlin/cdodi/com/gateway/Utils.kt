@@ -43,8 +43,8 @@ fun RestUserRequest.toUserRequest(): UserRequest =
         .setHobbiesIds(hobbiesIds)
         .build()
 
-inline fun MessageId(builder: MessageId.Builder.() -> Unit): MessageId =
-    MessageId.newBuilder().apply(builder).build()
+inline fun MessageGetReq(builder: MessageGetReq.Builder.() -> Unit): MessageGetReq =
+    MessageGetReq.newBuilder().apply(builder).build()
 
 inline fun MessageEditRequest(builder: MessageEditRequest.Builder.() -> Unit): MessageEditRequest =
     MessageEditRequest.newBuilder().apply(builder).build()

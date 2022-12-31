@@ -79,9 +79,9 @@ fun Route.userRoutes(
 
         for (frame in incoming) {
             val receivedMsg = converter?.deserialize<RestMessageRequest>(frame) ?: return@webSocket
-            msgStub.createMessage(receivedMsg.toMessageRequest(user.id))
+            val msg = msgStub.createMessage(receivedMsg.toMessageRequest(user.id))
             connections.forEach {
-                if (it.chat == chat) it.session.sendSerialized(receivedMsg)
+                if (it.chat == chat) it.session.sendSerialized(msg.toRestMessage())
             }
         }
     }
