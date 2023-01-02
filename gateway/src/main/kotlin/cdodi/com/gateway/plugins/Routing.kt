@@ -1,7 +1,9 @@
 package cdodi.com.gateway.plugins
 
+import arrow.core.continuations.either
 import cdodi.com.gateway.*
 import cdodi.com.gateway.controllers.messageRoutes
+import cdodi.com.gateway.controllers.restCall
 import cdodi.com.gateway.controllers.userRoutes
 import cdodi.com.gateway.dto.AuthData
 import cdodi.com.gateway.dto.RestUserRequest
@@ -30,28 +32,57 @@ fun Application.configureRouting() {
     val stub = UserServiceGrpcKt.UserServiceCoroutineStub(channel)
 
     routing {
+        post("/add") {
+            val newUser: UserRequest = call.receive<RestUserRequest>().toUserRequest()
+            val response = stub.createUser(newUser).toRestUserResponse()
+//            if (response == null) {
+//                call.respond(HttpStatusCode.BadRequest, "Unable to create new user")
+//                return@post
+//            }
+
+            val result = either {
+                stub.createUser(newUser).toRestUserResponse().bind()
+            }
+
+            restCall(result)
+//            call.respond(HttpStatusCode.OK, response)
+        }
+
         post("/login") {
             val authData = call.receive<AuthData>()
 
             val user = stub.getUser(Email { email = authData.email }).toRestUserResponse()
-            if (user == null) {
-                call.respond(HttpStatusCode.BadRequest, "User with email: '${authData.email}' doesn't exist")
-                return@post
+//            if (user == null) {
+//                call.respond(HttpStatusCode.BadRequest, "User with email: '${authData.email}' doesn't exist")
+//                return@post
+//            }
+            either {
+                if (user.bind().password != authData.password) {
+                    call.respond(HttpStatusCode.Unauthorized, "Incorrect credentials")
+                    return@either
+                }
+                val token = JWT.create()
+                    .withAudience(audience)
+                    .withIssuer(issuer)
+                    .withClaim("email", authData.email)
+                    .withExpiresAt(Date(System.currentTimeMillis() + ONE_HOUR))
+                    .sign(Algorithm.HMAC256(secret))
+
+                call.respond(HttpStatusCode.OK, hashMapOf("token" to token))
             }
+//            if (user.password != authData.password) {
+//                call.respond(HttpStatusCode.Unauthorized, "Incorrect credentials")
+//                return@post
+//            }
+//
+//            val token = JWT.create()
+//                .withAudience(audience)
+//                .withIssuer(issuer)
+//                .withClaim("email", authData.email)
+//                .withExpiresAt(Date(System.currentTimeMillis() + ONE_HOUR))
+//                .sign(Algorithm.HMAC256(secret))
 
-            if (user.password != authData.password) {
-                call.respond(HttpStatusCode.Unauthorized, "Incorrect credentials")
-                return@post
-            }
-
-            val token = JWT.create()
-                .withAudience(audience)
-                .withIssuer(issuer)
-                .withClaim("email", authData.email)
-                .withExpiresAt(Date(System.currentTimeMillis() + ONE_HOUR))
-                .sign(Algorithm.HMAC256(secret))
-
-            call.respond(HttpStatusCode.OK, hashMapOf("token" to token))
+//            call.respond(HttpStatusCode.OK, hashMapOf("token" to token))
         }
 
         authenticate("auth-jwt") {
@@ -60,17 +91,6 @@ fun Application.configureRouting() {
                 val email = principal?.payload?.getClaim("email")?.asString()
                 val expiresAt = principal?.expiresAt?.time?.minus(System.currentTimeMillis())
                 call.respondText("Hello, $email! Token is expired at $expiresAt ms.")
-            }
-
-            post("/add") {
-                val newUser: UserRequest = call.receive<RestUserRequest>().toUserRequest()
-                val response = stub.createUser(newUser).toRestUserResponse()
-                if (response == null) {
-                    call.respond(HttpStatusCode.BadRequest, "Unable to create new user")
-                    return@post
-                }
-
-                call.respond(HttpStatusCode.OK, response)
             }
 
             createRouteFromPath("/user").userRoutes(msgStub, stub)
